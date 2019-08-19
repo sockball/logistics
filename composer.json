@@ -12,7 +12,6 @@
             "email": "sockball@yahoo.com"
         }
     ],
-    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "sockball\\logistics\\": "src/"

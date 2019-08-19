@@ -1,0 +1,21 @@
+{
+    "name": "sockball/logistics",
+    "description": "简单物流查询整合",
+    "type": "library",
+    "require": {
+        "php": ">=7.0.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "sockball",
+            "email": "sockball@yahoo.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "sockball\\logistics\\": "src/"
+        }
+    }
+}

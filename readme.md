@@ -30,23 +30,69 @@ use sockball\logstics\Logistics;
 
 $waybillNo = 'l';
 // 圆通
-$result = Logistics::getLatestTrace(Logistics::TYPE_YTO, $waybillNo);
+$logistics = Logistics::getInstance();
+$result = $logistics->getLatestTrace(Logistics::TYPE_YTO, $waybillNo);
 print_r($result);
 ```
 或
-```
+```sh
+git clone https://github.com/sockball/logistics.git
+cd logistics
+
+# 检测所有快递的有效性
+php test/test.php
+
 php test/STO_test.php
 php test/YTO_test.php
 php test/ZTO_test.php
 ```
 
-## 方法
-主类为 `Logistics`，现可用方法都为静态  
-由于每次查询会保留一次单号和结果，若要连续查询同一订单最新情况，应设置 `force` 参数为 `true` （即强制发出请求查询）
+返回值示例
 ```php
-public static function getLatestTrace(string $type, string $waybillNo, bool $force = false)
-public static function getFullTraces (string $type, string $waybillNo, bool $force = false)
-public static function getOriginTrace(string $type, string $waybillNo, bool $force = false)
+// 失败
+[
+    'code' => -1,
+    'msg'  => '暂无信息'
+]
+
+// getLatestTrace 成功
+[
+    'code' => 0,
+    'data' => [
+        'time' => 1565369673,
+        'info' => '派件已【签收】',
+        'type' => '已签收'
+    ]
+]
+
+// getFullTraces 成功
+[
+    'code' => 0,
+    'data' => [
+        [
+            'time' => 1565369673,
+            'info' => '派件已【签收】',
+            'type' => '已签收'
+        ],
+        [
+            'time' => 1565364893,
+            'info' => '快件已到【xxx管家】【xxx市xxx店】,地址:xxx正门北侧xxx便民中心, 电话:18xxxxxx166',
+            'type' => '已签收'
+        ],
+        ...
+    ]
+]
+```
+
+## 方法
+主类为单例模式的 `Logistics`，使用时需先使用 `getInstance()` 静态方法获取实例  
+由于每次查询会保留一次单号和结果，若要连续查询同一订单最新情况，应设置 `force` 参数为 `true` （即强制发出请求查询）  
+以下为现有 `public` 方法
+```php
+public static function getInstace()
+public function getLatestTrace(string $type, string $waybillNo, bool $force = false)
+public function getFullTraces (string $type, string $waybillNo, bool $force = false)
+public function getOriginTrace(string $type, string $waybillNo, bool $force = false)
 ```
 
 ## License

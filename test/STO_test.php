@@ -6,8 +6,9 @@ use sockball\logistics\Logistics;
 
 $waybillNo = '3720159483221';
 
-print_r(Logistics::getLatestTrace(Logistics::TYPE_STO, $waybillNo));
+$logistics = Logistics::getInstance();
+print_r($logistics->getLatestTrace(Logistics::TYPE_STO, $waybillNo));
 
 echo PHP_EOL;
 
-print_r(Logistics::getFullTraces(Logistics::TYPE_STO, $waybillNo));
+print_r($logistics->getFullTraces(Logistics::TYPE_STO, $waybillNo));

@@ -12,28 +12,48 @@ class Logistics
     public const TYPE_STO = 'sto';
     public const TYPE_YTO = 'yto';
     public const TYPE_ZTO = 'zto';
+    public const RESPONSE_SUCCESS = 0;
+    public const RESPONSE_FAILED = -1;
 
     protected static $_logisticsInstances = [];
+    private static $instance = null;
 
-    public static function getLatestTrace(string $type, string $waybillNo, bool $force = false)
+    private function __construct()
     {
-        $instance = self::getInstance($type);
-        return $instance->getLatestTrace($waybillNo, $force);
+
     }
 
-    public static function getFullTraces(string $type, string $waybillNo, bool $force = false)
+    private function __clone()
     {
-        $instance = self::getInstance($type);
-        return $instance->getFullTraces($waybillNo, $force);
+
     }
 
-    public static function getOriginTraces(string $type, string $waybillNo, bool $force = false)
+    public static function getInstance()
     {
-        $instance = self::getInstance($type);
-        return $instance->getOriginTraces($waybillNo, $force);
+        if (self::$instance === null)
+        {
+            self::$instance = new self();
+        }
+
+        return self::$instance;
     }
 
-    protected static function getInstance($type)
+    public function getLatestTrace(string $type, string $waybillNo, bool $force = false)
+    {
+        return $this->getLogisticsInstance($type)->getLatestTrace($waybillNo, $force);
+    }
+
+    public function getFullTraces(string $type, string $waybillNo, bool $force = false)
+    {
+        return $this->getLogisticsInstance($type)->getFullTraces($waybillNo, $force);
+    }
+
+    public function getOriginTraces(string $type, string $waybillNo, bool $force = false)
+    {
+        return $this->getLogisticsInstance($type)->getOriginTraces($waybillNo, $force);
+    }
+
+    protected function getLogisticsInstance($type)
     {
         switch ($type)
         {

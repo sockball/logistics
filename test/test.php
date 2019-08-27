@@ -28,3 +28,8 @@ echo isSuccess($result) ? '圆通速递 正常' : '圆通速递 异常', PHP_EOL
 $waybillNo = '75166031906321';
 $result = $logistics->getLatestTrace(Logistics::TYPE_ZTO, $waybillNo);
 echo isSuccess($result) ? '中通快递 正常' : '中通快递 异常', PHP_EOL;
+
+// 百世快递
+$waybillNo = '70577935260961';
+$result = $logistics->getLatestTrace(Logistics::TYPE_BEST, $waybillNo);
+echo isSuccess($result) ? '百世快递 正常' : '百世快递 异常', PHP_EOL;

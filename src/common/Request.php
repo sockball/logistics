@@ -8,7 +8,7 @@ class Request
     public const CONTENT_TYPE_FORM = 'form';
     public const CONTENT_TYPE_FILE = 'file';
 
-    public function post(string $requestUrl, array $params, string $_contentType = self::CONTENT_TYPE_JSON)
+    public function post(string $requestUrl, array $params, string $_contentType = self::CONTENT_TYPE_JSON, bool $decode = true)
     {
         $contentType = $this->getContentType($_contentType);
         $context = stream_context_create([
@@ -20,7 +20,7 @@ class Request
         ]);
         $result = file_get_contents($requestUrl, false, $context);
 
-        return json_decode($result);
+        return $decode ? json_decode($result) : $result;
     }
 
     private function getContentType(string $contentType)

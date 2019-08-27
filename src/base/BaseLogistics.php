@@ -2,7 +2,6 @@
 
 namespace sockball\logistics\base;
 
-use stdClass;
 use sockball\logistics\common\LogisticsInterface;
 
 class BaseLogistics implements LogisticsInterface
@@ -47,12 +46,12 @@ class BaseLogistics implements LogisticsInterface
         return isset($traces['code']) && $traces['code'] === self::RESPONSE_FAILED;
     }
 
-    protected function isRequestSuccess(stdClass $result)
+    protected function isRequestSuccess($result)
     {
         return true;
     }
 
-    protected function formatTraceInfo(stdClass $trace)
+    protected function formatTraceInfo($trace)
     {
 
     }

@@ -2,7 +2,6 @@
 
 namespace sockball\logistics\base\ZTO;
 
-use stdClass;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\common\Request;
 
@@ -50,7 +49,6 @@ class ZTOLogistics extends BaseLogistics
     {
         if ($force === true || $this->_lastQueryNo !== $waybillNo)
         {
-            $this->_lastQueryNo = $waybillNo;
             $result = (new Request())->post(self::REQUEST_URL, ['billCode' => $waybillNo], Request::CONTENT_TYPE_FORM);
             if ($this->isRequestSuccess($result))
             {
@@ -59,6 +57,7 @@ class ZTOLogistics extends BaseLogistics
                 {
                     return $this->failed('暂无信息');
                 }
+                $this->_lastQueryNo = $waybillNo;
             }
             else
             {
@@ -69,12 +68,12 @@ class ZTOLogistics extends BaseLogistics
         return $this->_traces;
     }
 
-    protected function isRequestSuccess(stdClass $result)
+    protected function isRequestSuccess($result)
     {
         return isset($result->status) && $result->status === self::REQUEST_SUCCESS;
     }
 
-    protected function formatTraceInfo(stdClass $trace)
+    protected function formatTraceInfo($trace)
     {
         return [
             'time' => strtotime($trace->scanDate),

@@ -2,16 +2,17 @@
 
 namespace sockball\logistics;
 
-use stdClass;
 use sockball\logistics\base\STO\STOLogistics;
 use sockball\logistics\base\YTO\YTOLogistics;
 use sockball\logistics\base\ZTO\ZTOLogistics;
+use sockball\logistics\base\BEST\BESTLogistics;
 
 class Logistics
 {
     public const TYPE_STO = 'sto';
     public const TYPE_YTO = 'yto';
     public const TYPE_ZTO = 'zto';
+    public const TYPE_BEST = 'baishi';
     public const RESPONSE_SUCCESS = 0;
     public const RESPONSE_FAILED = -1;
 
@@ -78,6 +79,13 @@ class Logistics
                     self::$_logisticsInstances[$type] = new ZTOLogistics();
                 }
                 break;
+
+            case self::TYPE_BEST:
+                if (!isset(self::$_logisticsInstances[$type]))
+                {
+                    self::$_logisticsInstances[$type] = new BESTLogistics();
+                }
+                break;         
         }
 
         return self::$_logisticsInstances[$type];

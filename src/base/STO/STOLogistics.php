@@ -2,7 +2,6 @@
 
 namespace sockball\logistics\base\STO;
 
-use stdClass;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\common\Request;
 
@@ -47,7 +46,6 @@ class STOLogistics extends BaseLogistics
     {
         if ($force === true || $this->_lastQueryNo !== $waybillNo)
         {
-            $this->_lastQueryNo = $waybillNo;
             $result = (new Request())->post(self::REQUEST_URL, ['billCodes' => $waybillNo], Request::CONTENT_TYPE_FORM);
             if ($this->isRequestSuccess($result))
             {
@@ -56,6 +54,7 @@ class STOLogistics extends BaseLogistics
                 {
                     return $this->failed('暂无信息');
                 }
+                $this->_lastQueryNo = $waybillNo;
             }
             else
             {
@@ -66,12 +65,12 @@ class STOLogistics extends BaseLogistics
         return $this->_traces;
     }
 
-    protected function isRequestSuccess(stdClass $result)
+    protected function isRequestSuccess($result)
     {
         return isset($result->Status) && $result->Status === self::REQUEST_SUCCESS;
     }
 
-    protected function formatTraceInfo(stdClass $trace)
+    protected function formatTraceInfo($trace)
     {
         return [
             'time' => strtotime($trace->ScanDate),

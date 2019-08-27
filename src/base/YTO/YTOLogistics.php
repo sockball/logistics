@@ -2,7 +2,6 @@
 
 namespace sockball\logistics\base\YTO;
 
-use stdClass;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\common\Request;
 
@@ -47,7 +46,6 @@ class YTOLogistics extends BaseLogistics
     {
         if ($force === true || $this->_lastQueryNo !== $waybillNo)
         {
-            $this->_lastQueryNo = $waybillNo;
             $result = (new Request())->post(self::REQUEST_URL, ['waybillNo' => $waybillNo], Request::CONTENT_TYPE_FORM);
             if ($this->isRequestSuccess($result))
             {
@@ -56,6 +54,7 @@ class YTOLogistics extends BaseLogistics
                 {
                     return $this->failed('暂无信息');
                 }
+                $this->_lastQueryNo = $waybillNo;
             }
             else
             {
@@ -66,12 +65,12 @@ class YTOLogistics extends BaseLogistics
         return $this->_traces;
     }
 
-    protected function isRequestSuccess(stdClass $result)
+    protected function isRequestSuccess($result)
     {
         return isset($result->code) && $result->code === self::REQUEST_SUCCESS;
     }
 
-    protected function formatTraceInfo(stdClass $trace)
+    protected function formatTraceInfo($trace)
     {
         return [
             'time' => $trace->time / 1000,

@@ -2,11 +2,22 @@
 
 namespace sockball\logistics\common;
 
+use GuzzleHttp\Client as HttpClient;
+
 class Request
 {
     public const CONTENT_TYPE_JSON = 'json';
     public const CONTENT_TYPE_FORM = 'form';
     public const CONTENT_TYPE_FILE = 'file';
+
+    public function get(string $requestUrl, array $params, bool $decode = true)
+    {
+        $completeRequestUrl = $requestUrl . '?' . http_build_query($params);
+        $client = new HttpClient();
+        $result = (string) $client->request('GET', $completeRequestUrl, ['http_errors' => false])->getBody();
+
+        return $decode ? json_decode($result) : $result;
+    }
 
     public function post(string $requestUrl, array $params, string $_contentType = self::CONTENT_TYPE_JSON, bool $decode = true)
     {

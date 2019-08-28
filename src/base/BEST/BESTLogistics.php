@@ -10,7 +10,7 @@ use sockball\logistics\common\Request;
  */
 class BESTLogistics extends BaseLogistics
 {
-    private const TYPE_SENDING = '派件';
+    private const STATE_SENDING = '派件';
     private const REQUEST_URL = 'http://www.800bestex.com/Bill/Track';
 
     private $_lastQueryNo;
@@ -48,14 +48,14 @@ class BESTLogistics extends BaseLogistics
             {
                 array_shift($raw[0]);
                 $traces = [];
-                $typePattern = '/data-type="(.*?)"/';
+                $statePattern = '/data-type="(.*?)"/';
                 $infoPattern = '/<td>(.*?)<\/td>/';
                 foreach ($raw[0] as $v)
                 {
-                    preg_match($typePattern, $v, $type);
+                    preg_match($statePattern, $v, $state);
                     preg_match_all($infoPattern, $v, $info);
 
-                    if (empty($type))
+                    if (empty($state))
                     {
                         // <td colspan="3">暂时没有该运单的追踪记录，请随时关注订单动态</td>
                         return $this->failed('暂无信息');
@@ -63,7 +63,7 @@ class BESTLogistics extends BaseLogistics
                     $traces[] = [
                         'time' => strtotime($info[1][0]),
                         'info' => strip_tags($info[1][2]),
-                        'type' => $type[1],
+                        'state' => $state[1],
                     ];
                 }
                 $this->_lastQueryNo = $waybillNo;

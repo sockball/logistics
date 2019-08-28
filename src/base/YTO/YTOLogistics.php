@@ -7,7 +7,7 @@ use sockball\logistics\common\Request;
 
 class YTOLogistics extends BaseLogistics
 {
-    private const TYPE_SENDING = '派送';
+    private const STATE_SENDING = '派送';
     private const REQUEST_SUCCESS = 'success';
     private const REQUEST_FAILED = 'failed';
     private const REQUEST_URL = 'http://www.yto.net.cn/api/trace/waybill';
@@ -75,7 +75,7 @@ class YTOLogistics extends BaseLogistics
         return [
             'time' => $trace->time / 1000,
             'info' => $trace->info,
-            'type' => $trace->type,
+            'state' => $trace->type,
         ];
     }
 }

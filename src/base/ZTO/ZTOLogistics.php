@@ -7,7 +7,7 @@ use sockball\logistics\common\Request;
 
 class ZTOLogistics extends BaseLogistics
 {
-    private const TYPE_SENDING = '派件';
+    private const STATE_SENDING = '派件';
     private const REQUEST_SUCCESS = true;
     private const REQUEST_FAILED = false;
     private const REQUEST_URL = 'https://hdgateway.zto.com/WayBill_GetDetail';
@@ -78,7 +78,7 @@ class ZTOLogistics extends BaseLogistics
         return [
             'time' => strtotime($trace->scanDate),
             'info' => $trace->stateDescription,
-            'type' => $trace->scanType,
+            'state' => $trace->scanType,
         ];
     }
 }

@@ -1,16 +1,16 @@
 <?php
 
-namespace sockball\logistics\base\STO;
+namespace sockball\logistics\base\DANN;
 
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\common\Request;
 
-class STOLogistics extends BaseLogistics
+class DANNLogistics extends BaseLogistics
 {
-    private const STATE_SENDING = '派送中';
+    // private const STATE_SENDING = '';
     private const REQUEST_SUCCESS = true;
     private const REQUEST_FAILED = false;
-    private const REQUEST_URL = 'http://www.sto.cn/Service/LoadTrack';
+    private const REQUEST_URL = 'https://portal.danniao.com/logisticsDetails/lpcPackPubQuery';
 
     private $_lastQueryNo;
 
@@ -22,7 +22,10 @@ class STOLogistics extends BaseLogistics
             return $traces;
         }
 
-        return $this->success($this->formatTraceInfo($traces[0]));
+        $trace = $this->formatTraceInfo($traces['detail'][0]);
+        $trace['state'] = $traces['state'];
+
+        return $this->success($trace);
     }
 
     public function getFullTraces(string $waybillNo, bool $force = false)
@@ -34,10 +37,11 @@ class STOLogistics extends BaseLogistics
         }
 
         $data = [];
-        foreach ($traces as $trace)
+        foreach ($traces['detail'] as $trace)
         {
             $data[] = $this->formatTraceInfo($trace);
         }
+        $data[0]['state'] = $traces['state'];
 
         return $this->success($data);
     }
@@ -46,14 +50,18 @@ class STOLogistics extends BaseLogistics
     {
         if ($force === true || $this->_lastQueryNo !== $waybillNo)
         {
-            $result = (new Request())->post(self::REQUEST_URL, ['billCodes' => $waybillNo], Request::CONTENT_TYPE_FORM);
+            $result = (new Request())->get(self::REQUEST_URL, ['mailNoList' => $waybillNo]);
             if ($this->isRequestSuccess($result))
             {
-                $this->_traces = json_decode($result->ResultValue)[0]->ScanList ?? null;
-                if ($this->_traces === null)
+                $traces = $result->data[0]->fullTraceDetail ?? null;
+                if ($traces === null)
                 {
                     return $this->failed('暂无信息');
                 }
+                $this->_traces = [
+                    'state' => $result->data[0]->logisticsStatusDesc,
+                    'detail' => $traces,
+                ];
                 $this->_lastQueryNo = $waybillNo;
             }
             else
@@ -67,15 +75,15 @@ class STOLogistics extends BaseLogistics
 
     protected function isRequestSuccess($result)
     {
-        return isset($result->Status) && $result->Status === self::REQUEST_SUCCESS;
+        return isset($result->success) && $result->success === self::REQUEST_SUCCESS;
     }
 
     protected function formatTraceInfo($trace)
     {
         return [
-            'time' => strtotime($trace->ScanDate),
-            'info' => $trace->Memo,
-            'state' => $trace->ScanType,
+            'time' => strtotime($trace->time),
+            'info' => $trace->desc,
+            'state' => null,
         ];
     }
 }

@@ -7,6 +7,7 @@ use sockball\logistics\base\YTO\YTOLogistics;
 use sockball\logistics\base\ZTO\ZTOLogistics;
 use sockball\logistics\base\BEST\BESTLogistics;
 use sockball\logistics\base\DANN\DANNLogistics;
+use sockball\logistics\base\CHPO\CHPOLogistics;
 
 class Logistics
 {
@@ -15,6 +16,7 @@ class Logistics
     public const TYPE_ZTO = 'zto';
     public const TYPE_BEST = 'baishi';
     public const TYPE_DANN = 'danniao';
+    public const TYPE_CHPO = 'china post';
     public const RESPONSE_SUCCESS = 0;
     public const RESPONSE_FAILED = -1;
 
@@ -93,6 +95,13 @@ class Logistics
                 if (!isset(self::$_logisticsInstances[$type]))
                 {
                     self::$_logisticsInstances[$type] = new DANNLogistics();
+                }
+                break;
+
+            case self::TYPE_CHPO:
+                if (!isset(self::$_logisticsInstances[$type]))
+                {
+                    self::$_logisticsInstances[$type] = new CHPOLogistics();
                 }
                 break;
         }

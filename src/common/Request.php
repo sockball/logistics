@@ -56,7 +56,7 @@ class Request
         {
             case self::CONTENT_TYPE_JSON:
             default:
-                return json_encode($params, JSON_UNESCAPED_ENCODE);
+                return json_encode($params, JSON_UNESCAPED_UNICODE);
 
             case self::CONTENT_TYPE_FORM:
             case self::CONTENT_TYPE_FILE:

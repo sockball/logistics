@@ -38,3 +38,8 @@ echo isSuccess($result) ? '百世快递 正常' : '百世快递 异常', PHP_EOL
 $waybillNo = '611090452344701';
 $result = $logistics->getLatestTrace(Logistics::TYPE_DANN, $waybillNo);
 echo isSuccess($result) ? '丹鸟快递 正常' : '丹鸟快递 异常', PHP_EOL;
+
+// 中国邮政
+$waybillNo = '9860401996391';
+$result = $logistics->getLatestTrace(Logistics::TYPE_CHPO, $waybillNo);
+echo isSuccess($result) ? '中国邮政 正常' : '中国邮政 异常', PHP_EOL;

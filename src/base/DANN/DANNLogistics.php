@@ -5,6 +5,9 @@ namespace sockball\logistics\base\DANN;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\common\Request;
 
+/*
+ * 丹鸟快递
+ */
 class DANNLogistics extends BaseLogistics
 {
     // private const STATE_SENDING = '';

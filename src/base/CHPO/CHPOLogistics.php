@@ -50,19 +50,23 @@ class CHPOLogistics extends BaseLogistics
         if ($force === true || $this->_lastQueryNo !== $waybillNo)
         {
             $dir = __DIR__;
-            $result = json_decode(exec("python3 {$dir}/getMoveX.py"));
-            $params = [
-                'uuid' => $result->uuid,
-                'text[]' => $waybillNo,
-                'moveEnd_X' => $result->moveX,
-                // 似乎1代表full, 2代表latest
-                'selectType' => 1,
-            ];
 
-            // 验证失败则重试，误差大约在5以内...
+            // 验证失败则重试...
             $pass = false;
             for ($times = 0; $times < self::RETRY_TIMES; $times++)
             {
+                $result = json_decode(exec("python3 {$dir}/getMoveX.py"));
+                if (!isset($result->uuid))
+                {
+                    continue;
+                }
+                $params = [
+                    'uuid' => $result->uuid,
+                    'text[]' => $waybillNo,
+                    'moveEnd_X' => $result->moveX,
+                    // 似乎1代表full, 2代表latest
+                    'selectType' => 1,
+                ];
                 $result = (new Request())->post(self::REQUEST_URL, $params, Request::CONTENT_TYPE_FORM);
                 if ($this->isRequestSuccess($result))
                 {
@@ -71,7 +75,7 @@ class CHPOLogistics extends BaseLogistics
                 }
                 else if ($result->YZ === self::VERIFY_FAILED_STR)
                 {
-                    $params['moveEnd_X']++;
+                    continue;
                 }
                 else
                 {
@@ -89,11 +93,15 @@ class CHPOLogistics extends BaseLogistics
                 {
                     $this->_traces = $result;
                     $this->_lastQueryNo = $waybillNo;
-                }                
+                }
             }
-            else if (($result->YZ === self::VERIFY_FAILED_STR))
+            else if (!isset($result->YZ))
             {
-                return $this->failed('指定误差内未能成功通过滑动验证！！！');
+                return $this->failed('exec执行错误...');
+            }
+            else if ($result->YZ === self::VERIFY_FAILED_STR)
+            {
+                return $this->failed('指定重试次数内未能成功通过滑动验证！！！');
             }
             else
             {
@@ -107,7 +115,7 @@ class CHPOLogistics extends BaseLogistics
     /**
      * 
      * YZ可能的值:
-     * no：未通过滑动验证
+     * no：未通过滑动验证，一个uuid只能验证一次，请求一次即失效
      * unnormal：未提供单号
      * noSession：未正确请求生成uuid
      * 

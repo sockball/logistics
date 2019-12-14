@@ -21,12 +21,12 @@ def request():
 def base64ToArray(string):
     binary = base64.b64decode(string)
     # uint8是无符号八位整型，表示范围[0, 255]的整数
-    return np.fromstring(binary, np.uint8) 
+    return np.frombuffer(binary, np.uint8) 
 
 def reread(img):
     img_encode = cv2.imencode('.jpg', img)[1]
     binary = np.array(img_encode).tostring()
-    img = np.fromstring(binary, np.uint8)
+    img = np.frombuffer(binary, np.uint8)
 
     return cv2.imdecode(img, cv2.IMREAD_COLOR)
 

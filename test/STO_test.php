@@ -4,7 +4,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use sockball\logistics\Logistics;
 
-$waybillNo = '3720159483221';
+$waybillNo = '773017017415724';
 
 $logistics = Logistics::getInstance();
 print_r($logistics->getLatestTrace(Logistics::TYPE_STO, $waybillNo));

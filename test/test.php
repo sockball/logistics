@@ -22,12 +22,12 @@ function analyzeResult($result, $name)
 $logistics = Logistics::getInstance();
 
 // 申通
-$waybillNo = '3720159483221';
+$waybillNo = '773017017415724';
 $result = $logistics->getLatestTrace(Logistics::TYPE_STO, $waybillNo);
 analyzeResult($result, '申通快递');
 
 // 圆通
-$waybillNo = 'l';
+$waybillNo = 'YT4234858984188';
 $result = $logistics->getLatestTrace(Logistics::TYPE_YTO, $waybillNo);
 analyzeResult($result, '圆通速递');
 

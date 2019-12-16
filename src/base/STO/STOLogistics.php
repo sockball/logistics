@@ -50,7 +50,7 @@ class STOLogistics extends BaseLogistics
             if ($this->isRequestSuccess($result))
             {
                 $this->_traces = json_decode($result->ResultValue)[0]->ScanList ?? null;
-                if ($this->_traces === null)
+                if (empty($this->_traces))
                 {
                     return $this->failed('暂无信息');
                 }

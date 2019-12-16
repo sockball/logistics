@@ -102,7 +102,7 @@ php test/ZTO_test.php
 由于每次查询会保留一次单号和结果，若要连续查询同一订单最新情况，应设置 `force` 参数为 `true` （即强制发出请求查询）  
 以下为现有 `public` 方法
 ```php
-public static function getInstace()
+public static function getInstance()
 public function getLatestTrace(string $type, string $waybillNo, bool $force = false)
 public function getFullTraces (string $type, string $waybillNo, bool $force = false)
 public function getOriginTrace(string $type, string $waybillNo, bool $force = false)

@@ -11,17 +11,25 @@ use sockball\logistics\base\CHPO\CHPOLogistics;
 
 class Logistics
 {
-    public const TYPE_STO = 'sto';
-    public const TYPE_YTO = 'yto';
-    public const TYPE_ZTO = 'zto';
     public const TYPE_BEST = 'baishi';
     public const TYPE_DANN = 'danniao';
     public const TYPE_CHPO = 'china post';
+    public const TYPE_STO = 'sto';
+    public const TYPE_YTO = 'yto';
+    public const TYPE_ZTO = 'zto';
     public const RESPONSE_SUCCESS = 0;
     public const RESPONSE_FAILED = -1;
 
     protected static $_logisticsInstances = [];
     private static $instance = null;
+    private static $typeMappings = [
+        self::TYPE_BEST => BESTLogistics::class,
+        self::TYPE_CHPO => CHPOLogistics::class,
+        self::TYPE_DANN => DANNLogistics::class,
+        self::TYPE_STO  => STOLogistics::class,
+        self::TYPE_YTO  => YTOLogistics::class,
+        self::TYPE_ZTO  => ZTOLogistics::class,
+    ];
 
     private function __construct()
     {
@@ -60,50 +68,15 @@ class Logistics
 
     protected function getLogisticsInstance($type)
     {
-        switch ($type)
+        $class = self::$typeMappings[$type] ?? null;
+        if ($class === null)
         {
-            case self::TYPE_STO:
-            default:
-                if (!isset(self::$_logisticsInstances[$type]))
-                {
-                    self::$_logisticsInstances[$type] = new STOLogistics();
-                }
-                break;
+            throw new \Exception('Unknown logistics type');
+        }
 
-            case self::TYPE_YTO:
-                if (!isset(self::$_logisticsInstances[$type]))
-                {
-                    self::$_logisticsInstances[$type] = new YTOLogistics();
-                }
-                break;
-
-            case self::TYPE_ZTO:
-                if (!isset(self::$_logisticsInstances[$type]))
-                {
-                    self::$_logisticsInstances[$type] = new ZTOLogistics();
-                }
-                break;
-
-            case self::TYPE_BEST:
-                if (!isset(self::$_logisticsInstances[$type]))
-                {
-                    self::$_logisticsInstances[$type] = new BESTLogistics();
-                }
-                break;
-
-            case self::TYPE_DANN:
-                if (!isset(self::$_logisticsInstances[$type]))
-                {
-                    self::$_logisticsInstances[$type] = new DANNLogistics();
-                }
-                break;
-
-            case self::TYPE_CHPO:
-                if (!isset(self::$_logisticsInstances[$type]))
-                {
-                    self::$_logisticsInstances[$type] = new CHPOLogistics();
-                }
-                break;
+        if (!isset(self::$_logisticsInstances[$type]))
+        {
+            self::$_logisticsInstances[$type] = new $class();
         }
 
         return self::$_logisticsInstances[$type];

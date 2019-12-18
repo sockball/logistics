@@ -14,13 +14,12 @@ $type = Logistics::TYPE_YTO;
 $logistics = Logistics::getInstance();
 
 /**
- * 根据有效单号数据随机生成单号
+ * 根据有效单号(数字)随机生成单号
  *
- * @param  string $type 快递类型
  * @param  string $validWaybillNo 有效单号(仅包含数字部分)
- * @return array
+ * @return string
  */
-function getRandomWaybillNo(string $type, string $validWaybillNo)
+function getRandomWaybillNo(string $validWaybillNo)
 {
     $length = strlen($validWaybillNo);
     // 随机取有效单号的前几位数字
@@ -50,7 +49,7 @@ function getRandomWaybillNo(string $type, string $validWaybillNo)
 
 while (true)
 {
-    $waybillNo = $prefix . getRandomWaybillNo($type, $validWaybillNo) . $suffix;
+    $waybillNo = $prefix . getRandomWaybillNo($validWaybillNo) . $suffix;
     $result = $logistics->getLatestTrace($type, $waybillNo);
     if ($result['code'] === Logistics::RESPONSE_SUCCESS)
     {
@@ -59,7 +58,7 @@ while (true)
     }
     else
     {
-        echo "{$waybillNo} failed：{$result['msg']}\n";
+        echo "{$waybillNo} failed\n{$result['msg']}\n";
         // 防请求频率限制 比如圆通使用openresty...
         sleep(1);
     }

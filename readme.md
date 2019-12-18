@@ -31,15 +31,14 @@ composer require sockball/logistics
 ## Require
 部分物流需要 `python3` 支持，如中国邮政；需将 `python3` 加入环境变量
 
-* `php >= 7`，并启用 `exec`函数
-* `python >= 3`
-* `python` 所需模块 `cv2 requests numpy`：`pip install opencv-python requests numpy`
+* `php >= 7.1`，并启用 `exec`函数
+* `python >= 3` 并安装模块 `cv2 requests numpy`：`pip install opencv-python requests numpy`
 
 ## Demo
 ```php
 use sockball\logstics\Logistics;
 
-$waybillNo = 'l';
+$waybillNo = 'YT4234858984188';
 // 圆通
 $logistics = Logistics::getInstance();
 $result = $logistics->getLatestTrace(Logistics::TYPE_YTO, $waybillNo);

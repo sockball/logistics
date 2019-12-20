@@ -50,15 +50,15 @@ function getRandomWaybillNo(string $validWaybillNo)
 while (true)
 {
     $waybillNo = $prefix . getRandomWaybillNo($validWaybillNo) . $suffix;
-    $result = $logistics->getLatestTrace($type, $waybillNo);
-    if ($result['code'] === Logistics::RESPONSE_SUCCESS)
+    $response = $logistics->query($type, $waybillNo);
+    if ($response->isSuccess())
     {
-        echo "{$waybillNo}\n{$result['data']['info']}\n";
+        echo "{$waybillNo}\n{$response->info}\n";
         break;
     }
     else
     {
-        echo "{$waybillNo} failed\n{$result['msg']}\n";
+        echo "{$waybillNo} failed\n{$response->getError()}\n";
         // 防请求频率限制 比如圆通使用openresty...
         sleep(1);
     }

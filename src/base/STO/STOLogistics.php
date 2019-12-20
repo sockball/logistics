@@ -3,79 +3,57 @@
 namespace sockball\logistics\base\STO;
 
 use sockball\logistics\base\BaseLogistics;
-use sockball\logistics\common\Request;
+use sockball\logistics\base\Trace;
+use sockball\logistics\lib\Request;
 
 class STOLogistics extends BaseLogistics
 {
-    private const STATE_SENDING = '派送中';
+    public const CODE = 'sto';
+    protected const REQUEST_URL = 'http://www.sto.cn/Service/LoadTrack';
+
     private const REQUEST_SUCCESS = true;
-    private const REQUEST_FAILED = false;
-    private const REQUEST_URL = 'http://www.sto.cn/Service/LoadTrack';
 
-    private $_lastQueryNo;
-
-    public function getLatestTrace(string $waybillNo, bool $force = false)
+    public function query(string $waybillNo, array $options = [])
     {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
+        $response = Request::post(self::REQUEST_URL, ['billCodes' => $waybillNo]);
+        $result = null;
+        if ($response->isSuccess())
         {
-            return $traces;
-        }
-
-        return $this->success($this->formatTraceInfo($traces[0]));
-    }
-
-    public function getFullTraces(string $waybillNo, bool $force = false)
-    {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
-        {
-            return $traces;
-        }
-
-        $data = [];
-        foreach ($traces as $trace)
-        {
-            $data[] = $this->formatTraceInfo($trace);
-        }
-
-        return $this->success($data);
-    }
-
-    public function getOriginTraces(string $waybillNo, bool $force = false)
-    {
-        if ($force === true || $this->_lastQueryNo !== $waybillNo)
-        {
-            $result = (new Request())->post(self::REQUEST_URL, ['billCodes' => $waybillNo], Request::CONTENT_TYPE_FORM);
-            if ($this->isRequestSuccess($result))
+            [$success, $result] = $this->parseRaw($response->getRaw());
+            if ($success)
             {
-                $this->_traces = json_decode($result->ResultValue)[0]->ScanList ?? null;
-                if (empty($this->_traces))
-                {
-                    return $this->failed('暂无信息');
-                }
-                $this->_lastQueryNo = $waybillNo;
-            }
-            else
-            {
-                return $this->failed($result->message);
+                return $response->setSuccess($waybillNo, self::CODE, $result);
             }
         }
 
-        return $this->_traces;
+        return $response->setFailed($waybillNo, self::CODE, $result);
     }
 
-    protected function isRequestSuccess($result)
+    protected function parseRaw($raw)
+    {
+        if ($this->isValid($raw))
+        {
+            $result = json_decode($raw->ResultValue)[0]->ScanList ?? null;
+            if (empty($result))
+            {
+                return [false, '暂无信息'];
+            }
+            $traces = [];
+            foreach ($result as $item)
+            {
+                $traces[] = new Trace(strtotime($item->ScanDate), $item->Memo, $item->ScanType);
+            }
+
+            return [true, $traces];
+        }
+        else
+        {
+            return [false, $raw->StatusMessage ?? ''];
+        }
+    }
+
+    protected function isValid($result)
     {
         return isset($result->Status) && $result->Status === self::REQUEST_SUCCESS;
-    }
-
-    protected function formatTraceInfo($trace)
-    {
-        return [
-            'time' => strtotime($trace->ScanDate),
-            'info' => $trace->Memo,
-            'state' => $trace->ScanType,
-        ];
     }
 }

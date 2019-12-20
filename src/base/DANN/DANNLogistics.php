@@ -3,90 +3,63 @@
 namespace sockball\logistics\base\DANN;
 
 use sockball\logistics\base\BaseLogistics;
-use sockball\logistics\common\Request;
+use sockball\logistics\base\Trace;
+use sockball\logistics\lib\Request;
 
 /*
  * 丹鸟快递
  */
 class DANNLogistics extends BaseLogistics
 {
-    // private const STATE_SENDING = '';
+    public const CODE = 'dan_niao';
+    protected const REQUEST_URL = 'https://portal.danniao.com/logisticsDetails/lpcPackPubQuery';
+
     private const REQUEST_SUCCESS = true;
-    private const REQUEST_FAILED = false;
-    private const REQUEST_URL = 'https://portal.danniao.com/logisticsDetails/lpcPackPubQuery';
 
-    private $_lastQueryNo;
-
-    public function getLatestTrace(string $waybillNo, bool $force = false)
+    public function query(string $waybillNo, array $options = [])
     {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
+        $response = Request::get(self::REQUEST_URL, ['mailNoList' => $waybillNo]);
+        $result = null;
+        if ($response->isSuccess())
         {
-            return $traces;
-        }
-
-        $trace = $this->formatTraceInfo($traces['detail'][0]);
-        $trace['state'] = $traces['state'];
-
-        return $this->success($trace);
-    }
-
-    public function getFullTraces(string $waybillNo, bool $force = false)
-    {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
-        {
-            return $traces;
-        }
-
-        $data = [];
-        foreach ($traces['detail'] as $trace)
-        {
-            $data[] = $this->formatTraceInfo($trace);
-        }
-        $data[0]['state'] = $traces['state'];
-
-        return $this->success($data);
-    }
-
-    public function getOriginTraces(string $waybillNo, bool $force = false)
-    {
-        if ($force === true || $this->_lastQueryNo !== $waybillNo)
-        {
-            $result = (new Request())->get(self::REQUEST_URL, ['mailNoList' => $waybillNo]);
-            if ($this->isRequestSuccess($result))
+            [$success, $result] = $this->parseRaw($response->getRaw());
+            if ($success)
             {
-                $traces = $result->data[0]->fullTraceDetail ?? null;
-                if ($traces === null)
-                {
-                    return $this->failed('暂无信息');
-                }
-                $this->_traces = [
-                    'state' => $result->data[0]->logisticsStatusDesc,
-                    'detail' => $traces,
-                ];
-                $this->_lastQueryNo = $waybillNo;
-            }
-            else
-            {
-                return $this->failed($result->message);
+                return $response->setSuccess($waybillNo, self::CODE, $result);
             }
         }
 
-        return $this->_traces;
+        return $response->setFailed($waybillNo, self::CODE, $result);
     }
 
-    protected function isRequestSuccess($result)
+    protected function parseRaw($raw)
+    {
+        if ($this->isValid($raw))
+        {
+            $result = $raw->data[0]->fullTraceDetail ?? null;
+            if ($result === null)
+            {
+                return [false, '暂无信息'];
+            }
+            // 仅有最新状态
+            $latestState = $raw->data[0]->logisticsStatusDesc;
+            $traces = [];
+            foreach ($result as $index => $item)
+            {
+                $state = ($index === 0) ? $latestState : null;
+                $traces[] = new Trace(strtotime($item->time), $item->desc, $state);
+            }
+
+            return [true, $traces];
+        }
+        else
+        {
+            return [false, $raw->message ?? ''];
+        }
+    }
+
+    protected function isValid($result)
     {
         return isset($result->success) && $result->success === self::REQUEST_SUCCESS;
-    }
-
-    protected function formatTraceInfo($trace)
-    {
-        return [
-            'time' => strtotime($trace->time),
-            'info' => $trace->desc,
-            'state' => null,
-        ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace sockball\logistics;
 
+use Exception;
+use sockball\logistics\lib\Response;
 use sockball\logistics\base\STO\STOLogistics;
 use sockball\logistics\base\YTO\YTOLogistics;
 use sockball\logistics\base\ZTO\ZTOLogistics;
@@ -11,9 +13,9 @@ use sockball\logistics\base\CHPO\CHPOLogistics;
 
 class Logistics
 {
-    public const TYPE_BEST = 'baishi';
+    public const TYPE_BEST = BESTLogistics::CODE;
+    public const TYPE_CHPO = CHPOLogistics::CODE;
     public const TYPE_DANN = 'danniao';
-    public const TYPE_CHPO = 'china post';
     public const TYPE_STO = 'sto';
     public const TYPE_YTO = 'yto';
     public const TYPE_ZTO = 'zto';
@@ -51,19 +53,16 @@ class Logistics
         return self::$instance;
     }
 
-    public function getLatestTrace(string $type, string $waybillNo, bool $force = false)
+    /**
+     * @param string $type
+     * @param string $waybillNo
+     * @param array $options
+     * @return Response
+     * @throws Exception
+     */
+    public function query(string $type, string $waybillNo, array $options = [])
     {
-        return $this->getLogisticsInstance($type)->getLatestTrace($waybillNo, $force);
-    }
-
-    public function getFullTraces(string $type, string $waybillNo, bool $force = false)
-    {
-        return $this->getLogisticsInstance($type)->getFullTraces($waybillNo, $force);
-    }
-
-    public function getOriginTraces(string $type, string $waybillNo, bool $force = false)
-    {
-        return $this->getLogisticsInstance($type)->getOriginTraces($waybillNo, $force);
+        return $this->getLogisticsInstance($type)->query($waybillNo, $options);
     }
 
     protected function getLogisticsInstance($type)
@@ -71,7 +70,7 @@ class Logistics
         $class = self::$typeMappings[$type] ?? null;
         if ($class === null)
         {
-            throw new \Exception('Unknown logistics type');
+            throw new Exception('Unknown logistics type');
         }
 
         if (!isset(self::$_logisticsInstances[$type]))

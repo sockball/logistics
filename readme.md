@@ -13,15 +13,20 @@
 | 快递公司     | 常量名          | 抓取类型       | 支持       | 添加日期      | 备注|       失效日期
 | :-----:      | :-----:         | :-----:        | :-----:    | :-----:       | :-----:     | :-----:
 | 申通         | TYPE_STO        | 简单API        | ✅         | 2019-08-19
-| 圆通         | TYPE_YTO        | 简单API        | ✅         | 2019-08-19
+| 圆通         | TYPE_YTO        | 简单API        | ✅         | 2019-08-19    | 注意请求频率
 | 中通         | TYPE_ZTO        | 简单API        | ✅         | 2019-08-19
 | 百世快递     | TYPE_BSET       | HTML正则       | ✅         | 2019-08-27
 | 丹鸟快递     | TYPE_DANN       | 简单API        | ✅         | 2019-08-29
 | 中国邮政     | TYPE_CHPO       | API            | ✅         | 2019-08-30    | 滑动验证码
 | 顺丰         |                 |                | ❌
 | 韵达         |                 |                | ❌
-| 天天快递     |                 |                | 🚧         |               | 苏宁滑动验证码
+| 天天快递     |                 |                | ❌         |               | 苏宁滑动验证码
+| 17track     |                 |   API             | 🚧         |               | js加密
 
+## TODO
+* 重新整理readme...
+* 当前测试换成单元测试
+* 整合17track
 
 ## Install
 ```sh
@@ -29,7 +34,7 @@ composer require sockball/logistics
 ```
 
 ## Require
-部分物流需要 `python3` 支持，如中国邮政；需将 `python3` 加入环境变量
+部分物流需要 `python3` 支持，如中国邮政；
 
 * `php >= 7.1`，并启用 `exec`函数
 * `python >= 3` 并安装模块 `cv2 requests numpy`：`pip install opencv-python requests numpy`
@@ -37,12 +42,31 @@ composer require sockball/logistics
 ## Demo
 ```php
 use sockball\logstics\Logistics;
+use sockball\logistics\base\Trace;
 
-$waybillNo = 'YT4234858984188';
 // 圆通
+$waybillNo = 'YT4234858984188';
+
 $logistics = Logistics::getInstance();
-$result = $logistics->getLatestTrace(Logistics::TYPE_YTO, $waybillNo);
-print_r($result);
+$response = $logistics->query(Logistics::TYPE_YTO, $waybillNo);
+
+if ($response->isSuccess())
+{
+    foreach ($response as $trace)
+    {
+        /** @var Trace $trace */
+        // echo $trace->timestamp;
+        // echo $trace->state;
+        echo $trace->info . "\n";
+    }
+    // print_r($response->getLatest());
+    // print_r($response->getAll());
+    // print_r($response->getRaw());
+}
+else
+{
+    echo $response->getError();
+}
 ```
 或
 ```sh
@@ -51,60 +75,31 @@ cd logistics
 composer install
 
 # 检测所有快递的有效性
-php test/test.php
+php tests/test.php
 
-php test/STO_test.php
-php test/YTO_test.php
-php test/ZTO_test.php
+php tests/STO_test.php
+php tests/YTO_test.php
+php tests/ZTO_test.php
 ...
 ```
 
 返回值示例
 ```php
-// 失败
-[
-    'code' => -1,
-    'msg'  => '暂无信息'
-]
+// '暂无信息'
+$response->getError();
 
-// getLatestTrace 成功
-[
-    'code' => 0,
-    'data' => [
-        'time' => 1565369673,
-        'info' => '派件已【签收】',
-        'state' => '已签收'
-    ]
-]
+// 直接读取最新的物流信息
+$response->timestamp;
+$response->info;
 
-// getFullTraces 成功
-[
-    'code' => 0,
-    'data' => [
-        [
-            'time' => 1565369673,
-            'info' => '派件已【签收】',
-            'state' => '已签收'
-        ],
-        [
-            'time' => 1565364893,
-            'info' => '快件已到【xxx管家】【xxx市xxx店】,地址:xxx正门北侧xxx便民中心, 电话:18xxxxxx166',
-            'state' => '已签收'
-        ],
-        ...
-    ]
-]
-```
+// 遍历物流信息 或 getAll() 后再遍历
+foreach ($response as $trace)
+{
+    echo $trace->info;
+}
 
-## Method
-主类为单例模式的 `Logistics`，使用时需先使用 `getInstance()` 静态方法获取实例  
-由于每次查询会保留一次单号和结果，若要连续查询同一订单最新情况，应设置 `force` 参数为 `true` （即强制发出请求查询）  
-以下为现有 `public` 方法
-```php
-public static function getInstance()
-public function getLatestTrace(string $type, string $waybillNo, bool $force = false)
-public function getFullTraces (string $type, string $waybillNo, bool $force = false)
-public function getOriginTrace(string $type, string $waybillNo, bool $force = false)
+// 获取原请求数据
+$response->getRaw();
 ```
 
 ## License

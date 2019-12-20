@@ -3,135 +3,123 @@
 namespace sockball\logistics\base\CHPO;
 
 use sockball\logistics\base\BaseLogistics;
-use sockball\logistics\common\Request;
+use sockball\logistics\base\Trace;
+use sockball\logistics\lib\Request;
+use sockball\logistics\lib\Response;
 
 /*
  * 中国邮政
  */
 class CHPOLogistics extends BaseLogistics
 {
-    private const STATE_SENDING = '派送';
-    private const VERIFY_FAILED_STR = 'no';
+    public const CODE = 'china_post';
+    protected const REQUEST_URL = 'http://yjcx.chinapost.com.cn/qps/showPicture/verify/slideVerifyCheck';
+
+    private const SLIDE_VERIFY_FAILED = 'no';
     private const RETRY_TIMES = 5;
-    private const REQUEST_URL = 'http://yjcx.chinapost.com.cn/qps/showPicture/verify/slideVerifyCheck';
 
-    private $_lastQueryNo;
-
-    public function getLatestTrace(string $waybillNo, bool $force = false)
+    public function query(string $waybillNo, array $options = [])
     {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
+        [$slideVerify, $response, $cliError] = $this->request($waybillNo, $options['python_cli'] ?? 'python');
+        if ($response === null)
         {
-            return $traces;
+            // cli error
+            $response = new Response(null);
         }
+        $raw = $response->getRaw();
 
-        return $this->success($this->formatTraceInfo($traces[0]));
-    }
-
-    public function getFullTraces(string $waybillNo, bool $force = false)
-    {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
+        if ($slideVerify)
         {
-            return $traces;
-        }
-
-        $data = [];
-        foreach ($traces as $trace)
-        {
-            $data[] = $this->formatTraceInfo($trace);
-        }
-
-        return $this->success($data);
-    }
-
-    public function getOriginTraces(string $waybillNo, bool $force = false)
-    {
-        if ($force === true || $this->_lastQueryNo !== $waybillNo)
-        {
-            $dir = __DIR__;
-
-            // 验证失败则重试...
-            $pass = false;
-            for ($times = 0; $times < self::RETRY_TIMES; $times++)
+            if (empty($raw))
             {
-                $result = json_decode(exec("python3 {$dir}/getMoveX.py"));
-                if (!isset($result->uuid))
-                {
-                    continue;
-                }
-                $params = [
-                    'uuid' => $result->uuid,
-                    'text[]' => $waybillNo,
-                    'moveEnd_X' => $result->moveX,
-                    // 似乎1代表full, 2代表latest
-                    'selectType' => 1,
-                ];
-                $result = (new Request())->post(self::REQUEST_URL, $params, Request::CONTENT_TYPE_FORM);
-                if ($this->isRequestSuccess($result))
-                {
-                    $pass = true;
-                    break;
-                }
-                else if ($result->YZ === self::VERIFY_FAILED_STR)
-                {
-                    continue;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            if ($pass)
-            {
-                if (empty($result))
-                {
-                    return $this->failed('暂无信息');
-                }
-                else
-                {
-                    $this->_traces = $result;
-                    $this->_lastQueryNo = $waybillNo;
-                }
-            }
-            else if (!isset($result->YZ))
-            {
-                return $this->failed('exec执行错误...');
-            }
-            else if ($result->YZ === self::VERIFY_FAILED_STR)
-            {
-                return $this->failed('指定重试次数内未能成功通过滑动验证！！！');
+                $error = '暂无信息';
             }
             else
             {
-                return $this->failed("错误码为{$result->YZ}？？？");
+                return $response->setSuccess($waybillNo, self::CODE, $this->parseRaw($raw));
+            }
+        }
+        else if (!isset($raw->YZ))
+        {
+            // cli error
+            $error = implode('', $cliError);
+        }
+        else if ($raw->YZ === self::SLIDE_VERIFY_FAILED)
+        {
+            $error = '指定重试次数内未能成功通过滑动验证！！！';
+        }
+        else
+        {
+            $error = "错误码为{$raw->YZ}？？？";
+        }
+
+        return $response->setFailed($waybillNo, self::CODE, $error);
+    }
+
+    private function request($waybillNo, $python)
+    {
+        // 滑动验证失败则重试...
+        $slideVerify = false;
+        $dir = __DIR__;
+        $response = null;
+
+        for ($times = 0; $times < self::RETRY_TIMES; $times++)
+        {
+            $cliError = [];
+            $cliResult = json_decode(exec("{$python} {$dir}/getMoveX.py 2>&1", $cliError));
+            if (!isset($cliResult->uuid))
+            {
+                continue;
+            }
+            $params = [
+                'uuid' => $cliResult->uuid,
+                'text[]' => $waybillNo,
+                'moveEnd_X' => $cliResult->moveX,
+                // 似乎1代表full, 2代表latest
+                'selectType' => 1,
+            ];
+            $response = Request::post(self::REQUEST_URL, $params);
+            $raw = $response->getRaw();
+            if ($response->isSuccess() && $this->isValid($raw))
+            {
+                $slideVerify = true;
+                break;
+            }
+            else if ($raw->YZ === self::SLIDE_VERIFY_FAILED)
+            {
+                continue;
+            }
+            else
+            {
+                break;
             }
         }
 
-        return $this->_traces;
+        return [$slideVerify, $response, $cliError];
     }
 
     /**
-     * 
      * YZ可能的值:
      * no：未通过滑动验证，一个uuid只能验证一次，请求一次即失效
      * unnormal：未提供单号
      * noSession：未正确请求生成uuid
-     * 
+     *
+     * @param \stdClass $result
      * @return bool
      */
-    protected function isRequestSuccess($result)
+    protected function isValid($result)
     {
         return !isset($result->YZ);
     }
 
-    protected function formatTraceInfo($trace)
+    protected function parseRaw($raw)
     {
-        return [
-            'time' => strtotime($trace->opTime),
-            'info' => $trace->statusDesc,
-            'state' => $trace->opCodeStatus,
-        ];
+        $traces = [];
+        foreach ($raw as $item)
+        {
+            $traces[] = new Trace(strtotime($item->opTime), $item->statusDesc, $item->opCodeStatus);
+        }
+
+        return $traces;
     }
 }

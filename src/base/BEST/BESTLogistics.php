@@ -3,88 +3,67 @@
 namespace sockball\logistics\base\BEST;
 
 use sockball\logistics\base\BaseLogistics;
-use sockball\logistics\common\Request;
+use sockball\logistics\lib\Request;
+use sockball\logistics\base\Trace;
 
 /**
  * 百世快递
  */
 class BESTLogistics extends BaseLogistics
 {
-    private const STATE_SENDING = '派件';
-    private const REQUEST_URL = 'http://www.800bestex.com/Bill/Track';
+    public const CODE = 'best';
+    protected const REQUEST_URL = 'http://www.800bestex.com/Bill/Track';
 
-    private $_lastQueryNo;
-
-    public function getLatestTrace(string $waybillNo, bool $force = false)
+    public function query(string $waybillNo, array $options = [])
     {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
+        $response = Request::post(self::REQUEST_URL, ['code' => $waybillNo], false);
+        $result = null;
+        if ($response->isSuccess())
         {
-            return $traces;
-        }
-
-        return $this->success($traces[0]);
-    }
-
-    public function getFullTraces(string $waybillNo, bool $force = false)
-    {
-        $traces = $this->getOriginTraces($waybillNo, $force);
-        if ($this->isResponseFailed($traces))
-        {
-            return $traces;
-        }
-
-        return $this->success($traces);
-    }
-
-    public function getOriginTraces(string $waybillNo, bool $force = false)
-    {
-        if ($force === true || $this->_lastQueryNo !== $waybillNo)
-        {
-            $result = (new Request())->post(self::REQUEST_URL, ['code' => $waybillNo], Request::CONTENT_TYPE_FORM, false);
-            $rawPattern = '/<tr[\s\S]*?>[\s\S]*?<\/tr>/';
-            preg_match_all($rawPattern, $result, $raw);
-            if ($this->isRequestSuccess($raw))
+            [$success, $result] = $this->parseRaw($response->getRaw());
+            if ($success)
             {
-                array_shift($raw[0]);
-                $traces = [];
-                $statePattern = '/data-type="(.*?)"/';
-                $infoPattern = '/<td>(.*?)<\/td>/';
-                foreach ($raw[0] as $v)
+                return $response->setSuccess($waybillNo, self::CODE, $result);
+            }
+        }
+
+        return $response->setFailed($waybillNo, self::CODE, $result);
+    }
+
+    protected function parseRaw($raw)
+    {
+        $matchPattern = '#<tr[\s\S]*?>[\s\S]*?</tr>#';
+        preg_match_all($matchPattern, $raw, $match);
+        $result = $match[0];
+        if ($this->isValid($result))
+        {
+            array_shift($result);
+            $traces = [];
+            $statePattern = '/data-type="(.*?)"/';
+            $infoPattern = '#<td>(.*?)</td>#';
+            foreach ($result as $v)
+            {
+                preg_match($statePattern, $v, $state);
+                preg_match_all($infoPattern, $v, $info);
+
+                if (empty($state))
                 {
-                    preg_match($statePattern, $v, $state);
-                    preg_match_all($infoPattern, $v, $info);
-
-                    if (empty($state))
-                    {
-                        // <td colspan="3">暂时没有该运单的追踪记录，请随时关注订单动态</td>
-                        return $this->failed('暂无信息');
-                    }
-                    $traces[] = [
-                        'time' => strtotime($info[1][0]),
-                        'info' => strip_tags($info[1][2]),
-                        'state' => $state[1],
-                    ];
+                    // <td colspan="3">暂时没有该运单的追踪记录，请随时关注订单动态</td>
+                    return [false, '暂无信息'];
                 }
-                $this->_lastQueryNo = $waybillNo;
-                $this->_traces = $traces;
+                $traces[] = new Trace(strtotime($info[1][0]), strip_tags($info[1][2]), $state[1]);
             }
-            else
-            {
-                return $this->failed('没有这样的单号');
-            }
+
+            return [true, $traces];
         }
-
-        return $this->_traces;
+        else
+        {
+            return [false, '没有这样的单号'];
+        }
     }
 
-    protected function isRequestSuccess($result)
+    protected function isValid($result)
     {
-        return count($result[0] ?? []) > 1;
-    }
-
-    protected function formatTraceInfo($trace)
-    {
-
+        return count($result ?? []) > 1;
     }
 }

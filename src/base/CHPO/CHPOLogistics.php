@@ -2,6 +2,7 @@
 
 namespace sockball\logistics\base\CHPO;
 
+use Exception;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\base\Trace;
 use sockball\logistics\lib\Request;
@@ -20,23 +21,25 @@ class CHPOLogistics extends BaseLogistics
 
     public function query(string $waybillNo, array $options = [])
     {
-        [$slideVerify, $response, $cliError] = $this->request($waybillNo, $options['python_cli'] ?? 'python');
-        if ($response === null)
-        {
-            // cli error
-            $response = new Response(null);
+        $response = new Response($waybillNo, self::CODE);
+
+        $this->checkRequire();
+
+        try {
+            [$slideVerify, $raw, $cliError] = $this->request($waybillNo, $options['python_cli'] ?? 'python');
+        } catch (Exception $e) {
+            return $response->setError($e->getMessage());
         }
-        $raw = $response->getRaw();
 
         if ($slideVerify)
         {
             if (empty($raw))
             {
-                $error = '暂无信息';
+                return $response->setFailed('暂无信息');
             }
             else
             {
-                return $response->setSuccess($waybillNo, self::CODE, $this->parseRaw($raw));
+                return $response->setSuccess($this->parseRaw($raw));
             }
         }
         else if (!isset($raw->YZ))
@@ -53,7 +56,15 @@ class CHPOLogistics extends BaseLogistics
             $error = "错误码为{$raw->YZ}？？？";
         }
 
-        return $response->setFailed($waybillNo, self::CODE, $error);
+        return $response->setError($error);
+    }
+
+    private function checkRequire()
+    {
+        if (!function_exists('exec'))
+        {
+            throw new Exception('function exec required!');
+        }
     }
 
     private function request($waybillNo, $python)
@@ -61,7 +72,7 @@ class CHPOLogistics extends BaseLogistics
         // 滑动验证失败则重试...
         $slideVerify = false;
         $dir = __DIR__;
-        $response = null;
+        $raw = null;
 
         for ($times = 0; $times < self::RETRY_TIMES; $times++)
         {
@@ -78,9 +89,8 @@ class CHPOLogistics extends BaseLogistics
                 // 似乎1代表full, 2代表latest
                 'selectType' => 1,
             ];
-            $response = Request::post(self::REQUEST_URL, $params);
-            $raw = $response->getRaw();
-            if ($response->isSuccess() && $this->isValid($raw))
+            $raw = Request::post(self::REQUEST_URL, $params);
+            if ($this->isValid($raw))
             {
                 $slideVerify = true;
                 break;
@@ -95,7 +105,7 @@ class CHPOLogistics extends BaseLogistics
             }
         }
 
-        return [$slideVerify, $response, $cliError];
+        return [$slideVerify, $raw, $cliError];
     }
 
     /**

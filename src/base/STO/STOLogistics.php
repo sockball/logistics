@@ -2,10 +2,15 @@
 
 namespace sockball\logistics\base\STO;
 
+use Exception;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\base\Trace;
 use sockball\logistics\lib\Request;
+use sockball\logistics\lib\Response;
 
+/**
+ * 申通快递
+ */
 class STOLogistics extends BaseLogistics
 {
     public const CODE = 'sto';
@@ -15,18 +20,19 @@ class STOLogistics extends BaseLogistics
 
     public function query(string $waybillNo, array $options = [])
     {
-        $response = Request::post(self::REQUEST_URL, ['billCodes' => $waybillNo]);
-        $result = null;
-        if ($response->isSuccess())
+        $response = new Response($waybillNo, self::CODE);
+        try {
+            $raw = Request::post(self::REQUEST_URL, ['billCodes' => $waybillNo]);
+        } catch (Exception $e) {
+            return $response->setError($e->getMessage());
+        }
+        [$success, $result] = $this->parseRaw($raw);
+        if ($success)
         {
-            [$success, $result] = $this->parseRaw($response->getRaw());
-            if ($success)
-            {
-                return $response->setSuccess($waybillNo, self::CODE, $result);
-            }
+            return $response->setSuccess($result);
         }
 
-        return $response->setFailed($waybillNo, self::CODE, $result);
+        return $response->setFailed($result);
     }
 
     protected function parseRaw($raw)

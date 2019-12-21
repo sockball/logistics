@@ -3,7 +3,6 @@
 namespace sockball\logistics\lib;
 
 use GuzzleHttp\Client as HttpClient;
-use Exception;
 
 class Request
 {
@@ -22,48 +21,30 @@ class Request
      * @param string $requestUrl
      * @param array $params
      * @param bool $decode
-     * @return Response
+     * @return \stdClass|array|string
      */
     public static function get(string $requestUrl, array $params, bool $decode = true)
     {
         $client = self::getClient();
         $completeRequestUrl = $requestUrl . '?' . http_build_query($params);
-        try {
-            $result = (string) $client->request('GET', $completeRequestUrl)->getBody();
-        } catch (Exception $e) {
-            return self::failed($e->getMessage());
-        }
+        $result = (string) $client->request('GET', $completeRequestUrl)->getBody();
 
-        return self::success($decode ? json_decode($result) : $result);
+        return $decode ? json_decode($result) : $result;
     }
 
     /**
      * @param string $requestUrl
      * @param array $params
      * @param bool $decode
-     * @return Response
+     * @return \stdClass|array|string
      */
     public static function post(string $requestUrl, array $params, bool $decode = true)
     {
         $client = self::getClient();
-        try {
-            $result = (string) $client->request('POST', $requestUrl, [
-                'form_params' => $params,
-            ])->getBody();
-        } catch (Exception $e) {
-            return self::failed($e->getMessage());
-        }
+        $result = (string) $client->request('POST', $requestUrl, [
+            'form_params' => $params,
+        ])->getBody();
 
-        return self::success($decode ? json_decode($result) : $result);
-    }
-
-    private static function success($raw)
-    {
-        return new Response($raw);
-    }
-
-    private static function failed($error)
-    {
-        return new Response(null, Response::RESPONSE_FAILED, $error);
+        return $decode ? json_decode($result) : $result;
     }
 }

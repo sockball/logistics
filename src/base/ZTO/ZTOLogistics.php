@@ -2,9 +2,11 @@
 
 namespace sockball\logistics\base\ZTO;
 
+use Exception;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\base\Trace;
 use sockball\logistics\lib\Request;
+use sockball\logistics\lib\Response;
 
 /**
  * 中通快递
@@ -18,18 +20,21 @@ class ZTOLogistics extends BaseLogistics
 
     public function query(string $waybillNo, array $options = [])
     {
-        $response = Request::post(self::REQUEST_URL, ['billCode' => $waybillNo]);
-        $result = null;
-        if ($response->isSuccess())
-        {
-            [$success, $result] = $this->parseRaw($response->getRaw());
-            if ($success)
-            {
-                return $response->setSuccess($waybillNo, self::CODE, $result);
-            }
+        $response = new Response($waybillNo, self::CODE);
+        try {
+            $raw = Request::post(self::REQUEST_URL, ['billCode' => $waybillNo]);
+        } catch (Exception $e) {
+
+            return $response->setError($e->getMessage());
         }
 
-        return $response->setFailed($waybillNo, self::CODE, $result);
+        [$success, $result] = $this->parseRaw($raw);
+        if ($success)
+        {
+            return $response->setSuccess($result);
+        }
+
+        return $response->setFailed($result);
     }
 
     protected function parseRaw($raw)

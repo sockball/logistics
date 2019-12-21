@@ -12,6 +12,7 @@ use IteratorAggregate;
  * @property string       $waybillNo
  * @property array|string $raw
  * @property array        $traces
+ * @property string       $msg
  * @property string       $error
  * @property int          $statusCode
  *
@@ -21,14 +22,16 @@ use IteratorAggregate;
  */
 class Response extends BaseObject implements IteratorAggregate
 {
-    public const RESPONSE_SUCCESS = 1;
-    public const RESPONSE_FAILED  = -1;
+    public const RESPONSE_SUCCESS = 200;
+    public const RESPONSE_FAILED  = 400;
+    public const RESPONSE_ERROR   = 500;
 
     public $type;
     public $waybillNo;
 
     protected $raw;
     protected $traces;
+    protected $msg;
     protected $error;
     protected $statusCode;
 
@@ -44,35 +47,40 @@ class Response extends BaseObject implements IteratorAggregate
         throw new Exception("property {$attribute} is not exist");
     }
 
-    public function __construct($raw, int $statusCode = self::RESPONSE_SUCCESS, ?string $error = null)
+    public function __construct(string $waybillNo, string $type)
     {
         $this->setAttributes([
-            'raw' => $raw,
-            'statusCode' => $statusCode,
-            'error' => $error,
-        ], true);
+            'waybillNo' => $waybillNo,
+            'type' => $type,
+        ]);
     }
 
-    public function setSuccess(string $waybillNo, string $type, array $traces)
+    public function setSuccess(array $traces)
     {
         $this->setAttributes([
             'traces' => $traces,
-            'waybillNo' => $waybillNo,
-            'type' => $type,
             'statusCode' => self::RESPONSE_SUCCESS,
         ]);
 
         return $this;
     }
 
-    public function setFailed(string $waybillNo, string $type, ?string $error = null)
+    public function setFailed(string $msg)
+    {
+        $this->setAttributes([
+            'msg' => $msg,
+            'statusCode' => self::RESPONSE_FAILED,
+        ]);
+
+        return $this;
+    }
+
+    public function setError(string $error)
     {
         $this->setAttributes([
             'error' => $error,
-            'waybillNo' => $waybillNo,
-            'type' => $type,
-            'statusCode' => self::RESPONSE_FAILED,
-        ], true);
+            'statusCode' => self::RESPONSE_ERROR,
+        ]);
 
         return $this;
     }
@@ -108,6 +116,11 @@ class Response extends BaseObject implements IteratorAggregate
         return $this->raw;
     }
 
+    public function getMsg()
+    {
+        return $this->msg;
+    }
+
     public function getError()
     {
         return $this->error;
@@ -116,5 +129,10 @@ class Response extends BaseObject implements IteratorAggregate
     public function isSuccess()
     {
         return $this->statusCode === self::RESPONSE_SUCCESS;
+    }
+
+    public function isError()
+    {
+        return $this->statusCode === self::RESPONSE_ERROR;
     }
 }

@@ -35,11 +35,11 @@ class CHPOLogistics extends BaseLogistics
         {
             if (empty($raw))
             {
-                return $response->setFailed('暂无信息');
+                return $response->setFailed($raw,'暂无信息');
             }
             else
             {
-                return $response->setSuccess($this->parseRaw($raw));
+                return $response->setSuccess($raw, $this->parseRaw($raw));
             }
         }
         else if (!isset($raw->YZ))

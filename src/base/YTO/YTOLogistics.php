@@ -30,10 +30,10 @@ class YTOLogistics extends BaseLogistics
         [$success, $result] = $this->parseRaw($raw);
         if ($success)
         {
-            return $response->setSuccess($result);
+            return $response->setSuccess($raw, $result);
         }
 
-        return $response->setFailed($result);
+        return $response->setFailed($raw, $result);
     }
 
     protected function parseRaw($raw)

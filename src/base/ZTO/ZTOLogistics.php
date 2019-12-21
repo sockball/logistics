@@ -24,17 +24,16 @@ class ZTOLogistics extends BaseLogistics
         try {
             $raw = Request::post(self::REQUEST_URL, ['billCode' => $waybillNo]);
         } catch (Exception $e) {
-
             return $response->setError($e->getMessage());
         }
 
         [$success, $result] = $this->parseRaw($raw);
         if ($success)
         {
-            return $response->setSuccess($result);
+            return $response->setSuccess($raw, $result);
         }
 
-        return $response->setFailed($result);
+        return $response->setFailed($raw, $result);
     }
 
     protected function parseRaw($raw)

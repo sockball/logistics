@@ -55,9 +55,10 @@ class Response extends BaseObject implements IteratorAggregate
         ]);
     }
 
-    public function setSuccess(array $traces)
+    public function setSuccess($raw, array $traces)
     {
         $this->setAttributes([
+            'raw' => $raw,
             'traces' => $traces,
             'statusCode' => self::RESPONSE_SUCCESS,
         ]);
@@ -65,9 +66,10 @@ class Response extends BaseObject implements IteratorAggregate
         return $this;
     }
 
-    public function setFailed(string $msg)
+    public function setFailed($raw, string $msg)
     {
         $this->setAttributes([
+            'raw' => $raw,
             'msg' => $msg,
             'statusCode' => self::RESPONSE_FAILED,
         ]);
@@ -129,6 +131,11 @@ class Response extends BaseObject implements IteratorAggregate
     public function isSuccess()
     {
         return $this->statusCode === self::RESPONSE_SUCCESS;
+    }
+
+    public function isFailed()
+    {
+        return $this->statusCode === self::RESPONSE_FAILED;
     }
 
     public function isError()

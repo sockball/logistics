@@ -15,12 +15,10 @@ class Logistics
 {
     public const TYPE_BEST = BESTLogistics::CODE;
     public const TYPE_CHPO = CHPOLogistics::CODE;
-    public const TYPE_DANN = 'danniao';
-    public const TYPE_STO = 'sto';
-    public const TYPE_YTO = 'yto';
-    public const TYPE_ZTO = 'zto';
-    public const RESPONSE_SUCCESS = 0;
-    public const RESPONSE_FAILED = -1;
+    public const TYPE_DANN = DANNLogistics::CODE;
+    public const TYPE_STO  = STOLogistics::CODE;
+    public const TYPE_YTO  = YTOLogistics::CODE;
+    public const TYPE_ZTO  = ZTOLogistics::CODE;
 
     protected static $_logisticsInstances = [];
     private static $instance = null;
@@ -33,15 +31,9 @@ class Logistics
         self::TYPE_ZTO  => ZTOLogistics::class,
     ];
 
-    private function __construct()
-    {
+    private function __construct(){}
 
-    }
-
-    private function __clone()
-    {
-
-    }
+    private function __clone(){}
 
     public static function getInstance()
     {

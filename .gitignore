@@ -1,2 +1,4 @@
 /vendor
 /.idea
+/tests/codeCoverage
+.phpunit.result.cache

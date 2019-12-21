@@ -25,7 +25,6 @@
 
 ## TODO
 * 重新整理readme...
-* 当前测试换成单元测试
 * 整合17track
 
 ## Install
@@ -74,16 +73,11 @@ git clone https://github.com/sockball/logistics.git
 cd logistics
 composer install
 
-# 检测所有快递的有效性
-php tests/test.php
-
-php tests/STO_test.php
-php tests/YTO_test.php
-php tests/ZTO_test.php
+./vendor/bin/phpunit tests/
 ...
 ```
 
-返回值示例
+方法示例
 ```php
 // '暂无信息'
 $response->getError();

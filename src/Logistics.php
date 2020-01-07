@@ -10,6 +10,7 @@ use sockball\logistics\base\ZTO\ZTOLogistics;
 use sockball\logistics\base\BEST\BESTLogistics;
 use sockball\logistics\base\DANN\DANNLogistics;
 use sockball\logistics\base\CHPO\CHPOLogistics;
+use sockball\logistics\base\XVII\XVIILogistics;
 
 class Logistics
 {
@@ -19,6 +20,7 @@ class Logistics
     public const TYPE_STO  = STOLogistics::CODE;
     public const TYPE_YTO  = YTOLogistics::CODE;
     public const TYPE_ZTO  = ZTOLogistics::CODE;
+    public const TYPE_XVII = XVIILogistics::CODE;
 
     protected static $_logisticsInstances = [];
     private static $instance = null;
@@ -29,6 +31,7 @@ class Logistics
         self::TYPE_STO  => STOLogistics::class,
         self::TYPE_YTO  => YTOLogistics::class,
         self::TYPE_ZTO  => ZTOLogistics::class,
+        self::TYPE_XVII  => XVIILogistics::class,
     ];
 
     private function __construct(){}
@@ -54,7 +57,14 @@ class Logistics
      */
     public function query(string $type, string $waybillNo, array $options = [])
     {
-        return $this->getLogisticsInstance($type)->query($waybillNo, $options);
+        try {
+            $instance = $this->getLogisticsInstance($type);
+            $instance->beforeQuery();
+        } catch (Exception $e) {
+            return (new Response($waybillNo, $type))->setError($e->getMessage());
+        }
+
+        return $instance->query($waybillNo, $options);
     }
 
     protected function getLogisticsInstance($type)

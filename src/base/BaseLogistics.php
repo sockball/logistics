@@ -24,4 +24,6 @@ abstract class BaseLogistics implements LogisticsInterface
      * @return bool
      */
     abstract protected function isValid($result);
+
+    public function beforeQuery(){}
 }

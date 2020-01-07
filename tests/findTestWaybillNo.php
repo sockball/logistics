@@ -56,10 +56,14 @@ while (true)
         echo "{$waybillNo}\n{$response->info}\n";
         break;
     }
+    else if ($response->isFailed())
+    {
+        echo "{$waybillNo} failed\n{$response->getMsg()}\n";
+    }
     else
     {
-        echo "{$waybillNo} failed\n{$response->getError()}\n";
-        // 防请求频率限制 比如圆通使用openresty...
-        sleep(1);
+        echo "{$waybillNo} error\n{$response->getError()}\n";
     }
+    // 防请求频率限制 比如圆通使用openresty...
+    sleep(1);
 }

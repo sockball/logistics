@@ -2,7 +2,7 @@
 
 namespace sockball\logistics\base\CHPO;
 
-use Exception;
+use RuntimeException;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\base\Trace;
 use sockball\logistics\lib\Request;
@@ -19,11 +19,17 @@ class CHPOLogistics extends BaseLogistics
     private const SLIDE_VERIFY_FAILED = 'no';
     private const RETRY_TIMES = 5;
 
+    public function beforeQuery()
+    {
+        if (!function_exists('exec'))
+        {
+            throw new RuntimeException('CHPO replies on exec and python!!');
+        }
+    }
+
     public function query(string $waybillNo, array $options = [])
     {
         $response = new Response($waybillNo, self::CODE);
-
-        $this->checkRequire();
 
         try {
             [$slideVerify, $raw, $cliError] = $this->request($waybillNo, $options['python_cli'] ?? 'python');
@@ -59,15 +65,7 @@ class CHPOLogistics extends BaseLogistics
         return $response->setError($error);
     }
 
-    private function checkRequire()
-    {
-        if (!function_exists('exec'))
-        {
-            throw new Exception('function exec required!');
-        }
-    }
-
-    private function request($waybillNo, $python)
+    private function request(string $waybillNo, string $python)
     {
         // 滑动验证失败则重试...
         $slideVerify = false;

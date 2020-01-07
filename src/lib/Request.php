@@ -3,6 +3,7 @@
 namespace sockball\logistics\lib;
 
 use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Cookie\CookieJar;
 
 class Request
 {
@@ -38,13 +39,23 @@ class Request
      * @param bool $decode
      * @return \stdClass|array|string
      */
-    public static function post(string $requestUrl, array $params, bool $decode = true)
+    public static function post(string $requestUrl, array $params, bool $decode = true, array $options = [])
     {
         $client = self::getClient();
-        $result = (string) $client->request('POST', $requestUrl, [
-            'form_params' => $params,
-        ])->getBody();
+        if (!empty($params))
+        {
+            $options = array_merge($options, ['form_params' => $params]);
+        }
+
+        $result = (string) $client->request('POST', $requestUrl, $options)->getBody();
 
         return $decode ? json_decode($result) : $result;
+    }
+
+    public static function createCookie(array $cookies, string $domain)
+    {
+        $jar = new CookieJar();
+
+        return $jar->fromArray($cookies, $domain);
     }
 }

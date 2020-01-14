@@ -3,9 +3,10 @@
     "description": "简单物流查询整合",
     "type": "library",
     "require": {
-        "php": ">=7.1.0",
+        "php": ">=7.2.0",
         "guzzlehttp/guzzle": "^6.3",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ext-gd": "*"
     },
     "license": "MIT",
     "authors": [

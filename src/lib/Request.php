@@ -58,4 +58,22 @@ class Request
 
         return $jar->fromArray($cookies, $domain);
     }
+
+    /**
+     * 获取验证码携带的cookie（暂不一定通用
+     *
+     * @param string $url
+     * @param string $method
+     * @return array
+     */
+    public static function getCookie(string $url, string $method = 'GET')
+    {
+        $client = self::getClient();
+        $res = $client->request($method, $url);
+        $header = $res->getHeader('set-cookie')[0] ?? null;
+        preg_match('/=(.*);/', $header, $match);
+        $cookie = $match[1] ?? '';
+
+        return [$cookie, (string) $res->getBody()];
+    }
 }

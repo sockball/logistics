@@ -11,6 +11,7 @@ use sockball\logistics\base\BEST\BESTLogistics;
 use sockball\logistics\base\DANN\DANNLogistics;
 use sockball\logistics\base\CHPO\CHPOLogistics;
 use sockball\logistics\base\XVII\XVIILogistics;
+use sockball\logistics\base\YUNDA\YUNDALogistics;
 
 class Logistics
 {
@@ -21,6 +22,7 @@ class Logistics
     public const TYPE_YTO  = YTOLogistics::CODE;
     public const TYPE_ZTO  = ZTOLogistics::CODE;
     public const TYPE_XVII = XVIILogistics::CODE;
+    public const TYPE_YUNDA = YUNDALogistics::CODE;
 
     protected static $_logisticsInstances = [];
     private static $instance = null;
@@ -32,6 +34,7 @@ class Logistics
         self::TYPE_YTO  => YTOLogistics::class,
         self::TYPE_ZTO  => ZTOLogistics::class,
         self::TYPE_XVII  => XVIILogistics::class,
+        self::TYPE_YUNDA => YUNDALogistics::class,
     ];
 
     private function __construct(){}

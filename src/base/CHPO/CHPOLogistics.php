@@ -2,6 +2,7 @@
 
 namespace sockball\logistics\base\CHPO;
 
+use Exception;
 use RuntimeException;
 use sockball\logistics\base\BaseLogistics;
 use sockball\logistics\base\Trace;

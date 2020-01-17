@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 
 # pip3 install requests PyExecJS
 # linux下同时需要nodejs环境或其他JS Runtime

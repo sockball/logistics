@@ -17,7 +17,7 @@ class TestCase extends BaseTestCase
     {
         if (self::$logistics === null)
         {
-            self::$logistics = Logistics::getInstance();
+            self::$logistics = new Logistics();
         }
     }
 

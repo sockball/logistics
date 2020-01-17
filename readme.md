@@ -21,11 +21,13 @@
 | 顺丰         |                 |               | ❌
 | 韵达         | TYPE_YUNDA      | 加密JS解析      | 🚧         |                | 计算图片验证码
 | 天天快递      |                 |               | ❌          |               | 切片滑动验证码
-| 17track      | TYPE_XVII      |   API          | ✅          |               | js加密
+| 17track      | TYPE_XVII      |   API          | ✅          |     2020-01-07          | js加密
 
 ## TODO
 * 韵达返回问题...
+* 异常处理不完善...
 * 突破百世图片验证码...
+* 优速快递图片验证码根据[此文](https://segmentfault.com/a/1190000015240294)与OCR可破
 
 ## Install
 ```sh
@@ -46,7 +48,7 @@ use sockball\logistics\base\Trace;
 // 圆通
 $waybillNo = 'YT4234858984188';
 
-$logistics = Logistics::getInstance();
+$logistics = new Logistics();
 $response = $logistics->query(Logistics::TYPE_YTO, $waybillNo);
 
 if ($response->isSuccess())
@@ -61,6 +63,10 @@ if ($response->isSuccess())
     // print_r($response->getLatest());
     // print_r($response->getAll());
     // print_r($response->getRaw());
+}
+else if ($response->isFailed())
+{
+    echo $response->getMsg();
 }
 else
 {

@@ -60,7 +60,7 @@ class Request
     }
 
     /**
-     * 获取验证码携带的cookie（暂不一定通用
+     * Get captcha with cookie (may not in common
      *
      * @param string $url
      * @param string $method

@@ -4,6 +4,7 @@ namespace sockball\logistics\lib;
 
 use Exception;
 use IteratorAggregate;
+use sockball\logistics\base\Trace;
 
 /**
  * Class Response
@@ -11,9 +12,9 @@ use IteratorAggregate;
  * @property string       $type
  * @property string       $waybillNo
  * @property array|string $raw
- * @property array        $traces
- * @property string       $msg
- * @property string       $error
+ * @property Trace[]      $traces
+ * @property string       $msg        Failed message when query failed
+ * @property string       $error      Error message when error occurred
  * @property int          $statusCode
  *
  * @property int          $timestamp
@@ -37,7 +38,14 @@ class Response extends BaseObject implements IteratorAggregate
 
     protected static $traceAttribute = ['timestamp', 'info', 'state'];
 
-    public function __get($attribute)
+    /**
+     * When use like [$response->info] will return the latest
+     *
+     * @param string $attribute
+     * @return string|int|null
+     * @throws Exception
+     */
+    public function __get(string $attribute)
     {
         if (in_array($attribute, self::$traceAttribute))
         {
@@ -98,11 +106,15 @@ class Response extends BaseObject implements IteratorAggregate
         {
             foreach ($this->traces as $trace)
             {
+                /** @var Trace $trace */
                 yield $trace;
             }
         }
     }
 
+    /**
+     * @return Trace|null
+     */
     public function getLatest()
     {
         return $this->traces[0] ?? null;

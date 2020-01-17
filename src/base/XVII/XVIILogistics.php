@@ -43,7 +43,7 @@ class XVIILogistics extends BaseLogistics
             {
                 return $response->setSuccess($raw, $this->parseRaw($raw));
             }
-    
+
             return $response->setFailed($raw, '暂无信息');
         }
 
@@ -118,7 +118,7 @@ class XVIILogistics extends BaseLogistics
 
         foreach ($raw->dat[0]->track->$key as $item)
         {
-            $traces[] = new Trace(strtotime($item->a), "【{$item->c}: {$item->z}", null);
+            $traces[] = new Trace(strtotime($item->a), "【{$item->c}】: {$item->z}", null);
         }
 
         return $traces;

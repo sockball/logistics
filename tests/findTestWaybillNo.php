@@ -11,7 +11,7 @@ $prefix = 'YT';
 $suffix = '';
 $validWaybillNo = '4234858984188';
 $type = Logistics::TYPE_YTO;
-$logistics = Logistics::getInstance();
+$logistics = new Logistics();
 
 /**
  * 根据有效单号(数字)随机生成单号

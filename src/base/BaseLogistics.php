@@ -7,8 +7,6 @@ abstract class BaseLogistics implements LogisticsInterface
     public const CODE = '';
     protected const REQUEST_URL = '';
 
-    abstract public function query(string  $waybillNo, array $options = []);
-
     /**
      * 解析成统一格式的数据
      *

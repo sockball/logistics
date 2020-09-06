@@ -75,12 +75,17 @@ class XVIILogistics extends BaseLogistics
             // 时区有无影响?
             'timeZoneOffset' => -480,
         ]);
+        $headers = [
+            'Referer' => 'https://m.17track.net/zh-cn/track',
+        ];
+
         while (true)
         {
             $cookie = Request::createCookie(['Last-Event-ID' => $lastEventID], '.17track.net');
             $raw = Request::post(self::REQUEST_URL, [], true, [
                 'body' => $params,
                 'cookies' => $cookie,
+                'headers' => $headers,
             ]);
 
             if ($this->isValid($raw))

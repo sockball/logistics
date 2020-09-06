@@ -11,16 +11,20 @@ class XVII_Test extends TestCase
 {
     protected const VALID_NO = 'CI175732545JP';
 
-    public function testSuccess(): void
+    public function testSuccess(): Response
     {
         $response = self::$logistics->query(Logistics::TYPE_XVII, self::VALID_NO);
         $this->assertTrue($response->isSuccess(), $this->getMessage($response));
+
+        return $response;
     }
 
-    public function testFailed(): void
+    public function testFailed(): Response
     {
         $response = self::$logistics->query(Logistics::TYPE_XVII, 'CI111111111JP');
         $this->assertTrue($response->isFailed(), $this->getMessage($response));
+
+        return $response;
     }
 
     public function testError(): void
